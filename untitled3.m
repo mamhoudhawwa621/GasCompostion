@@ -1,0 +1,199 @@
+% Constants
+R = 8.314; % Universal gas constant [J/(mol*K)]
+T_kelv = 1473.15;   % Temperature [K]
+P = 250e2;  % Pressure [kPa]
+V = 7.374778e3;     % Volume [l]
+
+
+
+% Gas components and their molecular weights (in g/mol)
+molecularWeights = struct('CH4', 16.04, 'C2H6', 30.07, 'C3H8', 44.09, ...
+                          'C4H10', 58.12, 'C5H12', 72.15, 'CO2', 44.01, 'H2S', 34.08, ...
+                          'N2', 28.02, 'He', 4.00, 'H2O', 18.01);
+
+
+% Gas composition and percentages
+gasComposition = struct('CH4', 0.85, 'C2H6', rand(1)*0.05+0.03, 'C3H8', rand(1)*0.01+0.01, ...
+                        'C4H10', 0.10, 'C5H12', 0.01, 'CO2', rand(1)*0.01+0.01, 'H2S', 0.01, ...
+                        'N2', rand(1)*0.04+0.01, 'He', 0.005, 'H2O', 0);
+
+
+% the normal conditions 
+THEVALUME_OF_MITHAN= 0.85 * V / 1000 ;
+THE_P_OF_MITHAN=0.657 ;
+The_mass_of_CH4=THEVALUME_OF_MITHAN * THE_P_OF_MITHAN ;
+
+the_n_ch4=The_mass_of_CH4 / 16.04 ;
+disp(['the n of the methan' num2str(the_n_ch4) ' n']);
+
+
+
+
+% Normalize the composition percentages to ensure they add up to 100%
+totalPercentage = sum(cell2mat(struct2cell(gasComposition)));
+gasNames = fieldnames(gasComposition);
+for i = 1:numel(gasNames)
+    gasComposition.(gasNames{i}) = gasComposition.(gasNames{i}) / totalPercentage;
+end
+
+
+
+% Calculate moles of each gas component
+moles = struct();
+for i = 1:numel(gasNames)
+    moles.(gasNames{i}) = gasComposition.(gasNames{i}) * P * V / (R * T_kelv);
+end
+
+
+
+disp('start the simulation--------------');
+
+disp('the precentages of the gas compoments before burning');
+disp(gasComposition);
+
+
+
+
+
+
+
+disp('the number of the  moles of the gas before burning');
+disp(moles);
+
+
+% Calculate the mass of each gas component
+masses = struct();
+for i = 1:numel(gasNames)
+    masses.(gasNames{i}) = moles.(gasNames{i}) * molecularWeights.(gasNames{i});
+end
+
+% Calculate the total mass before burning
+totalMassBeforeBurning = sum(cell2mat(struct2cell(masses)));
+
+disp(['THE TOTAL MASS of the GAS BEFORE BURNING: ' num2str(totalMassBeforeBurning/1000) ' kg']);
+
+
+
+thermal_energy_teleased=0 ;%the relased energy after burning kj
+
+
+
+% the first Combustion stage (Assuming complete combustion of all hydrocarbons)
+for i = 1:numel(gasNames)
+    if strcmp(gasNames{i}, 'CH4')
+        gasComposition.CH4 = 0;  % No more CH4
+        moles.CO2=moles.CO2+moles.CH4 ;  % Increase in CO2 
+        moles.H2O=moles.H2O+2*moles.CH4 ;
+        thermal_energy_teleased=thermal_energy_teleased+moles.CH4*890 ;
+         moles.CH4=0 ;
+        
+    elseif strcmp(gasNames{i}, 'C2H6')
+        gasComposition.C2H6 = 0;  
+        moles.CO2=moles.CO2+2 * moles.C2H6 ;
+        moles.H2O=moles.H2O+3*moles.C2H6 ;
+        thermal_energy_teleased=thermal_energy_teleased+moles.C2H6*1541 ;
+        moles.C2H6=0 ;
+
+    elseif strcmp(gasNames{i}, 'C3H8')
+        gasComposition.C3H8 = 0;  % 1-2% reduction 3 * 1.7204e5
+        moles.CO2=moles.CO2+3 * moles.C3H8 ;
+        moles.H2O=moles.H2O+4*moles.C3H8 ;
+        thermal_energy_teleased=thermal_energy_teleased+moles.C3H8*2043.9 ;
+        moles.C3H8=0 ;
+
+    elseif strcmp(gasNames{i}, 'C4H10')   
+        gasComposition.C4H10 = 0;  % 10% reduction   
+        moles.CO2=moles.CO2+4 * moles.C4H10 ;
+        moles.H2O=moles.H2O+5*moles.C4H10 ;
+        thermal_energy_teleased=thermal_energy_teleased+moles.C4H10*890.3 ;
+        moles.C4H10=0 ;
+
+    elseif strcmp(gasNames{i}, 'C5H12')
+        gasComposition.C5H12 =0;  % 1% reduction
+        moles.CO2=moles.CO2+5 * moles.C5H12 ;
+        moles.H2O=moles.H2O+6*moles.C5H12 ;
+        thermal_energy_teleased=thermal_energy_teleased+moles.C5H12*3509 ;
+        moles.C5H12=0 ;
+
+    elseif strcmp(gasNames{i}, 'H2S')
+        moles.H2O=moles.H2O+moles.H2S ;
+        moles.SO2=moles.H2S ;
+        moles.H2S=0 ;
+
+
+    
+
+    
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+The_mass_of_co2=moles.CO2*molecularWeights.CO2 ;
+disp(['THE  relased MASS OF CO2 after burning    ' num2str(The_mass_of_co2/1000) ' kg']);
+
+
+
+The_mass_of_h2o=moles.H2O*molecularWeights.H2O ;
+disp(['THE  relased MASS OF H2O after burning    ' num2str(The_mass_of_h2o/1000) ' kg']);
+
+
+
+
+
+disp(['THE  relased energy after  burning 333.4408kg from the gas is :' num2str(thermal_energy_teleased) ' kj']);
+disp(['THE  relased energy after burning 1 kilo of the gas  is :' num2str(thermal_energy_teleased/333.4408/1000) ' MJ']);
+
+
+
+
+
+
+disp('the number of the  moles of the gas after burning');
+disp(moles);
+
+
+
+disp('end the simulation----------------');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
